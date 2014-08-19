@@ -293,7 +293,7 @@ int main()
 		"\"nanomet.exe 2 host.com 443\"\nwill use reverse_https and connect to host.com:443\n";
 
 #ifdef MINGW
-	if (argc==2 && strcmp(argv[1],"--help")) {
+	if ((argc<=2) || (argc==2 && strcmp(argv[1],"--help")==0)) {
 		printf(helpText);
 		exit(-1);
 	}
