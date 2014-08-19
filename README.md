@@ -1,8 +1,9 @@
 nanomet
 =======
 
-A "nano" meterpreter stager.  Copyright (c) 2014, Vlatko Kosturjak - kost
 nanomet is tinymet modified to support compiling using mingw compilers.
+
+A "nano" meterpreter stager.  Copyright (c) 2014, Vlatko Kosturjak - kost
 
 Based on tinymet by Copyright (c) 2014, Sherif Eldeeb "eldeeb.net"
 please visit http://tinymet.com for details
