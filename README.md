@@ -26,4 +26,18 @@ nanomet.exe 2 host.com 443
 
 will use reverse_https and connect to host.com:443
 
+Building
+========
+
+Linux: 
+
+make CC=i586-mingw32msvc-gcc
+
+Mac OS X:
+
+make CC=i386-mingw32-gcc
+
+Microsoft Windows / Visual C++:
+
+nmake /f Makefile.vc
 
