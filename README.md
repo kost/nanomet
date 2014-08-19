@@ -15,9 +15,9 @@ Usage: nanomet.exe [transport] LHOST LPORT
 Available transports are as follows:
 
 * 0: reverse_tcp
-* 1: reverse_http\n"
-* 2: reverse_https\n"
-* 3: bind_tcp\n"
+* 1: reverse_http
+* 2: reverse_https
+* 3: bind_tcp
 
 Example
 ========
