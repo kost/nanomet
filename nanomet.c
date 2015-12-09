@@ -273,7 +273,21 @@ unsigned char* rev_http(char* host, char* port, bool WithSSL){
 //	return wcstring;
 //}
 
+#ifdef WINDOWSMAIN
+int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) 
+{
+
+	mainw(__argc, __argv);
+	return 0;
+}
+#else
 int main (int argc, char *argv[])
+{
+	mainw(argc,argv);
+}
+#endif
+
+int mainw (int argc, char *argv[])
 {
 
 	char* TRANSPORT;
