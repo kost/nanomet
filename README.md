@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/kost/nanomet.png)](https://travis-ci.org/kost/nanomet)
+
 nanomet
 =======
 
